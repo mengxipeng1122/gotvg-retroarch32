@@ -51,7 +51,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", '--rom-dir', help="path to roms", default='/sdcard/roms/')
-    parser.add_argument("-i", '--input-xml', help="path to input xml file ", default='./../com.gotvg.mobileplatform.v.1.17/assets/gameconfig/OnEntireListAck.xml')
+    parser.add_argument("-i", '--input-xml', help="path to input xml file ", default='./../bins/com.gotvg.mobileplatform.v.1.17/assets/gameconfig/OnEntireListAck.xml')
     parser.add_argument("-t", '--tmp-file', help="path to temp playlist file", default='/tmp/gotvg.cn.lpl')
     args = parser.parse_args()
     rom_dir = args.rom_dir;
@@ -77,17 +77,20 @@ def main():
 
     for machine in root.iter('machine'):
         for game in machine.iter('game'):
+            # remote duplicated rom in a game 
+            roms = {}
             for server in game.iter('server'):
                 for version in server.iter('version'):
                     rom1 = version.attrib['rom1']
                     rom2 = version.attrib['rom2']
                     rom = rom2 if rom2!=None and rom2 != '0' else rom1
                     rompath = os.path.join(rom_dir, f'{rom}.zip')
-                    info['items'] .append(
-                    {
+                    roms[rom] = {
                         'path' : rompath, 
                         'label' : f"{game.attrib['title']}-{version.attrib['title']}",
-                    },)
+                    }
+            for k, v in roms.items():
+                info['items'] .append(v)
     json.dump(info, open(dfn, 'w'), indent=2)
 
     cmd = f'adb push {dfn} /sdcard/RetroArch/playlists'
